@@ -47,3 +47,13 @@ def test_no_valid_user_form(client: Client, user_data_factory: 'UserDataFactory'
 
     response = client.post("/identity/registration", data=registration_form.data)
     assert response.status_code == HTTPStatus.OK
+
+@pytest.mark.django_db()
+def test_create_user_without_date_of_birth(client: Client, user_data_factory: 'UserDataFactory', ):
+    post_data = user_data_factory(**{"date_of_birth":""})
+
+    registration_form = RegistrationForm(post_data)
+    assert registration_form.is_valid() == True
+
+    response = client.post("/identity/registration", data=registration_form.data)
+    assert response.status_code == HTTPStatus.FOUND
