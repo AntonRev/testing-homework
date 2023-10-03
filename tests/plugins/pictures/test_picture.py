@@ -7,6 +7,7 @@ from mimesis import Field, Locale, Schema
 from django.test import Client
 
 from server.apps.identity.models import User
+from server.apps.pictures.models import FavouritePicture
 
 
 @final
@@ -48,19 +49,30 @@ def client_auth(client: Client):
 @pytest.mark.django_db()
 def test_picture_form(client_auth: Client, favourites_data_form: 'FavouritesDataForm', ):
     post_data = favourites_data_form()
-    registration_form = FavouritesDataForm(post_data)
+    registration_form = FavouritePicture(post_data)
+    assert str(registration_form) == "<Picture {0} by {1}>".format(registration_form.foreign_id,
+                                                                   registration_form.user_id)
 
     client = client_auth()
-    response = client.post("/pictures/dashboard", data=registration_form)
+    response = client.post("/pictures/dashboard", data=post_data)
 
     assert response.get("location") == '/pictures/dashboard'
     assert response.status_code == HTTPStatus.FOUND
 
 
 @pytest.mark.django_db()
-def test_get_picture(client_auth: Client):
+def test_get_picture_dashboard(client_auth: Client):
     client = client_auth()
 
     response = client.get("/pictures/dashboard")
+
+    assert response.status_code == HTTPStatus.OK
+
+
+@pytest.mark.django_db()
+def test_get_picture_favourites(client_auth: Client):
+    client = client_auth()
+
+    response = client.get("/pictures/favourites")
 
     assert response.status_code == HTTPStatus.OK
